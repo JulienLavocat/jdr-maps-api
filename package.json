@@ -11,11 +11,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^9.0.0",
     "nanoid": "^3.1.22",
     "socket.io": "^4.0.1"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.3",
     "utf-8-validate": "^5.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^15.0.2"
   }
 }

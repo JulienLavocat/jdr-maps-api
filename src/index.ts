@@ -1,3 +1,6 @@
+import { config } from "dotenv";
+config();
+
 import { Server as HTTPServer } from "http";
 import { Server as IO, Socket } from "socket.io";
 import Room from "./room";
@@ -51,4 +54,4 @@ function onJoin(socket: Socket) {
 	});
 }
 
-http.listen(8082);
+http.listen(parseInt(process.env.PORT || "8080"));
