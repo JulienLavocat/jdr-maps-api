@@ -1,17 +1,16 @@
 import { config } from "dotenv";
-config();
-
 import { Server as HTTPServer } from "http";
 import { Server as IO, Socket } from "socket.io";
 import Room from "./room";
+config();
 
 const http = new HTTPServer();
 const io = new IO(http, {
 	allowEIO3: true,
 });
 
-const rooms = {
-	jdr: new Room("jdr"),
+const rooms: Record<string, Room> = {
+	jdr: new Room("jdr", io),
 };
 
 io.on("connection", (socket) => {
@@ -20,38 +19,29 @@ io.on("connection", (socket) => {
 	socket.on(
 		"add_marker",
 		(roomId: string, pos: [number, number], color: string) => {
-			console.log("Added marker", roomId, pos);
-
-			const room = rooms.jdr;
-
-			room.addMarker(pos, color);
-			socket.to(room.roomId).emit("markers_updated", room.markers);
+			rooms[roomId].addMarker(socket.id, pos, color);
 		},
 	);
 
 	socket.on("remove_marker", (roomId: string, id: string) => {
-		console.log("remove", roomId, id);
-		const room = rooms.jdr;
+		rooms[roomId].removeMarker(socket.id, id);
+	});
 
-		room.removeMarker(id);
-		socket.to(room.roomId).emit("markers_updated", room.markers);
+	socket.on("disconnecting", (reason) => {
+		console.log(socket.rooms);
+		for (const roomId of socket.rooms) rooms[roomId]?.onLeave(socket.id);
 	});
 });
 
 function onJoin(socket: Socket) {
 	const roomId = socket.handshake.query.roomId || "";
 
-	console.log(socket.id, "joined");
+	if (!roomId) socket.disconnect(true);
+
 	socket.leave(socket.id);
 	socket.join(roomId);
 
-	const room = rooms.jdr;
-
-	socket.to(roomId).emit("room_joined", {
-		id: socket.id,
-		color: room.getColor(),
-		markers: room.markers,
-	});
+	rooms.jdr.onJoin(socket);
 }
 
 http.listen(parseInt(process.env.PORT || "8080"));
