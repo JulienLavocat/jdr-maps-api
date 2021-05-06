@@ -15,6 +15,7 @@ const upload = multer({
 		key: (req, file, cb) => {
 			cb(null, file.originalname);
 		},
+		acl: "public-read",
 	}),
 });
 

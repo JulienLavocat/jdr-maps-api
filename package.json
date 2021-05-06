@@ -15,6 +15,7 @@
     "@types/multer": "^1.4.5",
     "@types/multer-s3": "^2.7.9",
     "aws-sdk": "^2.901.0",
+    "cors": "^2.8.5",
     "dotenv": "^9.0.0",
     "express": "^4.17.1",
     "multer": "^1.4.2",

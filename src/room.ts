@@ -32,6 +32,7 @@ const DEFAULT_TOKEN_SIZE = 80;
 export default class Room {
 	roomId: string;
 	colors: string[];
+	mapUrl: string;
 	markers: Marker[];
 	tokens: Token[];
 	io: IO;
@@ -42,6 +43,7 @@ export default class Room {
 		this.markers = [];
 		this.tokens = [];
 		this.io = io;
+		this.mapUrl = "/maps/Garde.jpg";
 	}
 
 	onJoin(socket: Socket) {
@@ -51,6 +53,7 @@ export default class Room {
 			color: this.getColor(),
 			markers: this.markers,
 			tokens: this.tokens,
+			mapUrl: this.mapUrl,
 		});
 	}
 
@@ -113,6 +116,15 @@ export default class Room {
 	updateTokens(tokens?: Token[]) {
 		if (tokens) this.tokens = tokens;
 		this.io.to(this.roomId).emit("tokens_updated", this.tokens);
+	}
+
+	flytTo(pos: [number, number]) {
+		this.io.to(this.roomId).emit("fly_to", pos);
+	}
+
+	setMap(id: string, mapUrl: string) {
+		this.mapUrl = mapUrl;
+		this.io.to(this.roomId).emit("set_map", mapUrl);
 	}
 
 	log(msg: string) {
