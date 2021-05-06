@@ -1,10 +1,14 @@
 import { config } from "dotenv";
 import { Server as HTTPServer } from "http";
+import express from "express";
 import { Server as IO, Socket } from "socket.io";
 import Room from "./room";
+import router from "./express";
+import multer from "multer";
 config();
 
-const http = new HTTPServer();
+const app = express();
+const http = new HTTPServer(app);
 const io = new IO(http, {
 	allowEIO3: true,
 });
@@ -12,6 +16,12 @@ const io = new IO(http, {
 const rooms: Record<string, Room> = {
 	jdr: new Room("jdr", io),
 };
+
+const upload = multer();
+
+// router.use(upload.single()));
+
+app.use(router);
 
 io.on("connection", (socket) => {
 	onJoin(socket);
@@ -25,6 +35,24 @@ io.on("connection", (socket) => {
 
 	socket.on("remove_marker", (roomId: string, id: string) => {
 		rooms[roomId].removeMarker(socket.id, id);
+	});
+
+	socket.on(
+		"add_token",
+		(roomId: string, pos: [number, number], imgUrl: string) => {
+			rooms[roomId].addToken(socket.id, pos, imgUrl);
+		},
+	);
+
+	socket.on(
+		"update_token_pos",
+		(roomId: string, tokenId: string, pos: [number, number]) => {
+			rooms[roomId].updateTokenPosition(socket.id, tokenId, pos);
+		},
+	);
+
+	socket.on("remove_token", (roomId: string, tokenId: string) => {
+		rooms[roomId].removeToken(socket.id, tokenId);
 	});
 
 	socket.on("disconnecting", (reason) => {

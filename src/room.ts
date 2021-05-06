@@ -19,16 +19,28 @@ export interface Marker {
 	ownerId: string;
 }
 
+export interface Token {
+	id: string;
+	pos: [number, number];
+	ownerId: string;
+	imgUrl: string;
+	size: number;
+}
+
+const DEFAULT_TOKEN_SIZE = 80;
+
 export default class Room {
 	roomId: string;
 	colors: string[];
 	markers: Marker[];
+	tokens: Token[];
 	io: IO;
 
 	constructor(roomId: string, io: IO) {
 		this.roomId = roomId;
 		this.colors = [...COLORS];
 		this.markers = [];
+		this.tokens = [];
 		this.io = io;
 	}
 
@@ -38,12 +50,13 @@ export default class Room {
 			id: socket.id,
 			color: this.getColor(),
 			markers: this.markers,
+			tokens: this.tokens,
 		});
 	}
 
 	onLeave(socketId: string) {
 		console.log("Removing marker of " + socketId);
-		this.updateMarkers(this.markers.filter((e) => e.ownerId !== socketId));
+		//this.updateMarkers(this.markers.filter((e) => e.ownerId !== socketId));
 	}
 
 	addMarker(socketId: string, pos: [number, number], color: string) {
@@ -57,6 +70,36 @@ export default class Room {
 		this.updateMarkers(this.markers.filter((e) => e.id !== markerId));
 	}
 
+	addToken(socketId: string, pos: [number, number], imgUrl: string) {
+		this.log(`${socketId} added marker at ${pos}`);
+		this.tokens.push({
+			id: nanoid(),
+			pos,
+			imgUrl,
+			ownerId: socketId,
+			size: DEFAULT_TOKEN_SIZE,
+		});
+		this.updateTokens();
+	}
+
+	updateTokenPosition(
+		socketId: string,
+		tokenId: string,
+		pos: [number, number],
+	) {
+		this.log(`${socketId} updated token ${tokenId} position to ${pos}`);
+		const token = this.tokens.find((e) => e.id === tokenId);
+		if (!token) return;
+		token.pos = pos;
+
+		this.updateTokens();
+	}
+
+	removeToken(socketId: string, tokenId: string) {
+		this.log(`${socketId} removed token ${tokenId}`);
+		this.updateTokens(this.tokens.filter((e) => e.id !== tokenId));
+	}
+
 	getColor() {
 		if (this.colors.length === 0) this.colors = [...COLORS];
 		return this.colors.shift();
@@ -65,6 +108,11 @@ export default class Room {
 	updateMarkers(markers?: Marker[]) {
 		if (markers) this.markers = markers;
 		this.io.to(this.roomId).emit("markers_updated", this.markers);
+	}
+
+	updateTokens(tokens?: Token[]) {
+		if (tokens) this.tokens = tokens;
+		this.io.to(this.roomId).emit("tokens_updated", this.tokens);
 	}
 
 	log(msg: string) {
