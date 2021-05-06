@@ -4,7 +4,7 @@ import express from "express";
 import { Server as IO, Socket } from "socket.io";
 import Room from "./room";
 import router from "./express";
-import multer from "multer";
+import cors from "cors";
 config();
 
 const app = express();
@@ -17,9 +17,11 @@ const rooms: Record<string, Room> = {
 	jdr: new Room("jdr", io),
 };
 
-const upload = multer();
-
-// router.use(upload.single()));
+app.use(
+	cors({
+		origin: "*",
+	}),
+);
 
 app.use(router);
 
@@ -50,6 +52,10 @@ io.on("connection", (socket) => {
 			rooms[roomId].updateTokenPosition(socket.id, tokenId, pos);
 		},
 	);
+
+	socket.on("set_map", (roomId: string, mapUrl: string) => {
+		rooms[roomId].setMap(socket.id, mapUrl);
+	});
 
 	socket.on("remove_token", (roomId: string, tokenId: string) => {
 		rooms[roomId].removeToken(socket.id, tokenId);
