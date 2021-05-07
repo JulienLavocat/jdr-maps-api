@@ -10,17 +10,22 @@ const upload = multer({
 		s3,
 		bucket: "jdr",
 		metadata: (req, file, cb) => {
+			console.log((req as Request).body);
 			cb(null, Object.assign({}, (req as Request).body));
 		},
 		key: (req, file, cb) => {
-			cb(null, file.originalname);
+			cb(null, (req as Request).body.name);
 		},
 		acl: "public-read",
 	}),
 });
 
-router.post("/maps", upload.single("map"), async (req, res) => {
-	res.send(await listMaps());
+router.post("/maps", upload.single("file"), async (req, res) => {
+	res.send({
+		uploaded: true,
+		message: "Successfully uploaded",
+		maps: await listMaps(),
+	});
 });
 
 router.get("/maps", async (req, res) => {

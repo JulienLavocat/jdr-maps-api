@@ -78,4 +78,6 @@ function onJoin(socket: Socket) {
 	rooms.jdr.onJoin(socket);
 }
 
-http.listen(parseInt(process.env.PORT || "8080"));
+http.listen(parseInt(process.env.PORT || "8080"), () => {
+	console.log("Listening on " + process.env.PORT || "8080");
+});

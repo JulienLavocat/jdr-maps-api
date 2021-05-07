@@ -15,7 +15,11 @@ export const listMaps = async () => {
 				Bucket: "jdr",
 			})
 			.promise()
-	).Contents?.map((e) => ({ name: e.Key, date: e.LastModified }));
+	).Contents?.map((e) => ({
+		name: e.Key,
+		date: e.LastModified,
+		url: "https://jdr.s3.fr-par.scw.cloud" + "/" + e.Key,
+	}));
 };
 
 export default s3;
