@@ -5,6 +5,10 @@ import { Server as IO, Socket } from "socket.io";
 import Room from "./room";
 import router from "./express";
 import cors from "cors";
+import { nanoid } from "nanoid";
+import RoomsManager from "./room/roomsManager";
+import ChannelsManager from "./chat/channelsManager";
+import { Message } from "./chat/channel";
 config();
 
 const app = express();
@@ -12,10 +16,6 @@ const http = new HTTPServer(app);
 const io = new IO(http, {
 	allowEIO3: true,
 });
-
-const rooms: Record<string, Room> = {
-	jdr: new Room("jdr", io),
-};
 
 app.use(
 	cors({
@@ -25,59 +25,42 @@ app.use(
 
 app.use(router);
 
+RoomsManager.addRoom("jdr");
+
+const chatHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
+	initialize: (socket, channelId: string, username: string) => {
+		const channel = ChannelsManager.get(channelId);
+
+		channel.onJoin(socket, username);
+
+		socket.emit(
+			"initialize",
+			channelId,
+			channel.getMessages(),
+			channel.users,
+		);
+	},
+	send_message: (socket, channelId: string, msg: Message) =>
+		ChannelsManager.get(channelId).send(msg),
+};
+
 io.on("connection", (socket) => {
-	onJoin(socket);
-
-	socket.on(
-		"add_marker",
-		(roomId: string, pos: [number, number], color: string) => {
-			rooms[roomId].addMarker(socket.id, pos, color);
-		},
-	);
-
-	socket.on("remove_marker", (roomId: string, id: string) => {
-		rooms[roomId].removeMarker(socket.id, id);
-	});
-
-	socket.on(
-		"add_token",
-		(roomId: string, pos: [number, number], imgUrl: string) => {
-			rooms[roomId].addToken(socket.id, pos, imgUrl);
-		},
-	);
-
-	socket.on(
-		"update_token_pos",
-		(roomId: string, tokenId: string, pos: [number, number]) => {
-			rooms[roomId].updateTokenPosition(socket.id, tokenId, pos);
-		},
-	);
-
-	socket.on("set_map", (roomId: string, mapUrl: string) => {
-		rooms[roomId].setMap(socket.id, mapUrl);
-	});
-
-	socket.on("remove_token", (roomId: string, tokenId: string) => {
-		rooms[roomId].removeToken(socket.id, tokenId);
-	});
-
-	socket.on("disconnecting", (reason) => {
-		console.log(socket.rooms);
-		for (const roomId of socket.rooms) rooms[roomId]?.onLeave(socket.id);
-	});
-});
-
-function onJoin(socket: Socket) {
 	const roomId = socket.handshake.query.roomId || "";
 
-	if (!roomId) socket.disconnect(true);
+	if (!roomId || Array.isArray(roomId)) return socket.disconnect(true);
 
 	socket.leave(socket.id);
 	socket.join(roomId);
+	console.log(`roomId`, JSON.stringify(roomId));
 
-	rooms.jdr.onJoin(socket);
-}
+	RoomsManager.getRoom(roomId).onJoin(socket);
+
+	for (const [event, handler] of Object.entries(chatHandlers))
+		socket.on(event, (...args) => handler(socket, ...args));
+});
 
 http.listen(parseInt(process.env.PORT || "8080"), () => {
 	console.log("Listening on " + process.env.PORT || "8080");
 });
+
+export { io };
