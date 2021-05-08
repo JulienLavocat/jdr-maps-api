@@ -16,7 +16,7 @@ export const getMedia = async (gifUrl: string) => {
 	).json();
 
 	try {
-		const gif = res.results[0].media[0].gif.url;
+		const gif = res.results[0].media[0].mp4.url;
 		cache[gifUrl] = gif;
 		return gif;
 	} catch (error) {
