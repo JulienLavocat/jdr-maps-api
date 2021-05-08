@@ -21,6 +21,7 @@
     "multer": "^1.4.2",
     "multer-s3": "^2.9.0",
     "nanoid": "^3.1.22",
+    "node-fetch": "^2.6.1",
     "socket.io": "^4.0.1"
   },
   "optionalDependencies": {
@@ -28,6 +29,7 @@
     "utf-8-validate": "^5.0.5"
   },
   "devDependencies": {
-    "@types/node": "^15.0.2"
+    "@types/node": "^15.0.2",
+    "@types/node-fetch": "^2.5.10"
   }
 }
