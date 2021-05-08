@@ -80,6 +80,9 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 	remove_token: (socket: Socket, roomId: string, tokenId: string) => {
 		RoomsManager.getRoom(roomId).tokens.remove(tokenId);
 	},
+	fly_to: (socket, roomId: string, pos: [number, number], zoom: number) => {
+		RoomsManager.getRoom(roomId).flytTo(pos, zoom);
+	},
 	disconnecting: (socket: Socket, reason) => {
 		console.log(socket.rooms);
 		for (const roomId of socket.rooms)
@@ -136,8 +139,8 @@ export default class Room {
 		return this.colors.shift();
 	}
 
-	flytTo(pos: [number, number]) {
-		this.io.to(this.roomId).emit("fly_to", pos);
+	flytTo(pos: [number, number], zoom: number) {
+		this.io.to(this.roomId).emit("fly_to", pos, zoom);
 	}
 
 	setMap(id: string, mapUrl: string) {
