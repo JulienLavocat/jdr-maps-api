@@ -45,13 +45,14 @@ const chatHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 };
 
 io.on("connection", (socket) => {
-	const roomId = socket.handshake.query.roomId || "";
+	const roomId = socket.handshake.query.roomId;
+	const userId = socket.handshake.query.userId;
+	if (!roomId || Array.isArray(roomId)) return socket.disconnect();
+	if (!userId || Array.isArray(userId)) return socket.disconnect();
+	socket.data.userId = userId;
 
-	if (!roomId || Array.isArray(roomId)) return socket.disconnect(true);
-
-	socket.leave(socket.id);
+	socket.leave(socket.data.userId);
 	socket.join(roomId);
-	console.log(`roomId`, JSON.stringify(roomId));
 
 	RoomsManager.getRoom(roomId).onJoin(socket);
 

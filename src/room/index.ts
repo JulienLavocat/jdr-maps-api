@@ -45,7 +45,7 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 			id: nanoid(),
 			color,
 			pos,
-			ownerId: socket.id,
+			ownerId: socket.data.userId,
 		});
 	},
 	remove_marker: (socket: Socket, roomId: string, id: string) => {
@@ -61,7 +61,7 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 			id: nanoid(),
 			pos,
 			imgUrl,
-			ownerId: socket.id,
+			ownerId: socket.data.userId,
 			size: DEFAULT_TOKEN_SIZE,
 		});
 	},
@@ -75,7 +75,7 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 		tokens.update(tokenId, "pos", pos);
 	},
 	set_map: (socket: Socket, roomId: string, mapUrl: string) => {
-		RoomsManager.getRoom(roomId).setMap(socket.id, mapUrl);
+		RoomsManager.getRoom(roomId).setMap(socket.data.userId, mapUrl);
 	},
 	remove_token: (socket: Socket, roomId: string, tokenId: string) => {
 		RoomsManager.getRoom(roomId).tokens.remove(tokenId);
@@ -83,7 +83,7 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 	disconnecting: (socket: Socket, reason) => {
 		console.log(socket.rooms);
 		for (const roomId of socket.rooms)
-			RoomsManager.getRoom(roomId)?.onLeave(socket.id);
+			RoomsManager.getRoom(roomId)?.onLeave(socket.data.userId);
 	},
 };
 
@@ -109,10 +109,10 @@ export default class Room {
 	}
 
 	onJoin(socket: Socket) {
-		this.log(`${socket.id} connected`);
+		this.log(`${socket.data.userId} connected`);
 
-		socket.to(this.roomId).emit("room_joined", {
-			id: socket.id,
+		this.io.to(this.roomId).emit("room_joined", {
+			id: socket.data.userId,
 			color: this.getColor(),
 			markers: this.markers.getEntities(),
 			tokens: this.tokens.getEntities(),

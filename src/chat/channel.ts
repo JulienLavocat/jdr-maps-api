@@ -36,10 +36,12 @@ export default class Channel {
 	onJoin(socket: Socket, username: string) {
 		socket.join(this.id);
 
-		this.users[socket.id] = {
-			id: socket.id,
+		this.users[socket.data.userId] = {
+			id: socket.data.userId,
 			name: username || "Unknown Player",
 		};
+		console.log("emit new user");
+		socket.to(this.id).emit("new_user", this.id, this.users);
 	}
 
 	onLeave(socketId: string) {
