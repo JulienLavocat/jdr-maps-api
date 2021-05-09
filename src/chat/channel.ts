@@ -11,6 +11,7 @@ export interface Message {
 	id?: string;
 	sender: MessageSender;
 	content: string;
+	sentAt: number;
 }
 
 export default class Channel {
@@ -50,6 +51,7 @@ export default class Channel {
 
 	send(msg: Message) {
 		if (!msg.id) msg.id = nanoid();
+		msg.sentAt = Date.now();
 		this.messages.push(msg);
 		this.io.to(this.id).emit("new_message", this.id, this.messages);
 		this.bot?.onMessage(this, msg);
