@@ -40,6 +40,7 @@ export default class MessageBuilder {
 
 	build(): Message {
 		return {
+			sentAt: Date.now(),
 			sender: this.sender,
 			content: this.content,
 			id: nanoid(),
