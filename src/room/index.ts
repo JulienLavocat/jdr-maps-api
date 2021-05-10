@@ -27,6 +27,7 @@ export interface Marker {
 export interface Token {
 	id: string;
 	pos: [number, number];
+	rotation: number;
 	ownerId: string;
 	imgUrl: string;
 	size: number;
@@ -63,16 +64,22 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 			imgUrl,
 			ownerId: socket.data.userId,
 			size: DEFAULT_TOKEN_SIZE,
+			rotation: 0,
 		});
 	},
-	update_token_pos: (
+	update_token: (
 		socket: Socket,
 		roomId: string,
 		tokenId: string,
 		pos: [number, number],
+		rotation: number,
 	) => {
 		const tokens = RoomsManager.getRoom(roomId).tokens;
-		tokens.update(tokenId, "pos", pos);
+		tokens.set(tokenId, {
+			...tokens.get(tokenId),
+			pos,
+			rotation,
+		});
 	},
 	set_map: (socket: Socket, roomId: string, mapUrl: string) => {
 		RoomsManager.getRoom(roomId).setMap(socket.data.userId, mapUrl);
@@ -144,6 +151,7 @@ export default class Room {
 	}
 
 	setMap(id: string, mapUrl: string) {
+		console.log(`Updating map ${this.mapUrl} to ${mapUrl}`);
 		this.mapUrl = mapUrl;
 		this.io.to(this.roomId).emit("set_map", mapUrl);
 	}

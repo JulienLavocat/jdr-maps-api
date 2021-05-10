@@ -8,6 +8,8 @@ const s3 = new aws.S3({
 	region: "fr-par",
 });
 
+console.log(s3);
+
 export const listMaps = async () => {
 	return (
 		await s3

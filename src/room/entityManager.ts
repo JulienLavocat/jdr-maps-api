@@ -31,7 +31,7 @@ export class EntityManager<T extends Entity> {
 		this.broadcastUpdate();
 	}
 	get(entityId: string) {
-		return this.entities[entityId];
+		return this.entities[entityId] as T;
 	}
 	remove(entityId: string) {
 		delete this.entities[entityId];
