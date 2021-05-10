@@ -102,9 +102,18 @@ export interface UserInfos {
 	color: string;
 }
 
+export interface MapData {
+	name: string;
+	url: string;
+}
+
 export default class Room {
 	private colors: string[];
-	private mapUrl: string;
+	private map2: {
+		maps: MapData[];
+		current: number;
+	};
+	private map: string;
 	markers: EntityManager<Marker>;
 	tokens: EntityManager<Token>;
 	chats: { name: string; id: string }[];
@@ -114,7 +123,11 @@ export default class Room {
 		this.colors = [...COLORS];
 		this.markers = new EntityManager(io, roomId, "markers");
 		this.tokens = new EntityManager(io, roomId, "tokens");
-		this.mapUrl = "Garde.jpg";
+		this.map = "Garde.jpg";
+		this.map2 = {
+			maps: [{ name: "Garde.jpg", url: "Garde.jpg" }],
+			current: 0,
+		};
 
 		const channel = ChannelsManager.createChannel(
 			"lancer-de-dés",
@@ -141,7 +154,7 @@ export default class Room {
 			color,
 			markers: this.markers.getEntities(),
 			tokens: this.tokens.getEntities(),
-			mapUrl: this.mapUrl,
+			mapUrl: this.map,
 			chats: this.chats,
 			users: this.users,
 		});
@@ -168,8 +181,8 @@ export default class Room {
 	}
 
 	setMap(id: string, mapUrl: string) {
-		console.log(`Updating map ${this.mapUrl} to ${mapUrl}`);
-		this.mapUrl = mapUrl;
+		console.log(`Updating map ${this.map} to ${mapUrl}`);
+		this.map = mapUrl;
 		this.io.to(this.roomId).emit("set_map", mapUrl);
 	}
 
