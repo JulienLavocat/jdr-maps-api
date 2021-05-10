@@ -42,6 +42,8 @@ const chatHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 	},
 	send_message: (socket, channelId: string, msg: Message) =>
 		ChannelsManager.get(channelId).send(msg),
+	clear_messages: (socket, channelId: string) =>
+		ChannelsManager.get(channelId).clear(),
 };
 
 io.on("connection", (socket) => {

@@ -60,4 +60,9 @@ export default class Channel {
 	getMessages() {
 		return this.messages;
 	}
+
+	clear() {
+		this.messages = [];
+		this.io.to(this.id).emit("clear_messages", this.id);
+	}
 }
