@@ -49,14 +49,18 @@ const chatHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 io.on("connection", (socket) => {
 	const roomId = socket.handshake.query.roomId;
 	const userId = socket.handshake.query.userId;
+	const name = socket.handshake.query.name;
+	console.log(name);
 	if (!roomId || Array.isArray(roomId)) return socket.disconnect();
 	if (!userId || Array.isArray(userId)) return socket.disconnect();
+	if (!name || Array.isArray(name)) return socket.disconnect();
 	socket.data.userId = userId;
+	socket.data.name = name;
 
 	socket.leave(socket.data.userId);
 	socket.join(roomId);
 
-	RoomsManager.getRoom(roomId).onJoin(socket);
+	RoomsManager.getRoom(roomId).onJoin(socket, name);
 
 	for (const [event, handler] of Object.entries(chatHandlers))
 		socket.on(event, (...args) => handler(socket, ...args));

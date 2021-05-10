@@ -91,11 +91,16 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 		RoomsManager.getRoom(roomId).flytTo(pos, zoom);
 	},
 	disconnecting: (socket: Socket, reason) => {
-		console.log(socket.rooms);
 		for (const roomId of socket.rooms)
 			RoomsManager.getRoom(roomId)?.onLeave(socket.data.userId);
 	},
 };
+
+export interface UserInfos {
+	id: string;
+	name: string;
+	color: string;
+}
 
 export default class Room {
 	private colors: string[];
@@ -103,6 +108,7 @@ export default class Room {
 	markers: EntityManager<Marker>;
 	tokens: EntityManager<Token>;
 	chats: { name: string; id: string }[];
+	users: Record<string, UserInfos>;
 
 	constructor(private io: IO, private roomId: string) {
 		this.colors = [...COLORS];
@@ -116,34 +122,45 @@ export default class Room {
 		);
 
 		this.chats = [{ id: channel.id, name: channel.name }];
+		this.users = {};
 	}
 
-	onJoin(socket: Socket) {
+	onJoin(socket: Socket, name: string) {
 		this.log(`${socket.data.userId} connected`);
+
+		const color = this.getColor();
+
+		this.users[socket.data.userId] = {
+			id: socket.data.userId,
+			color,
+			name,
+		};
 
 		this.io.to(this.roomId).emit("room_joined", {
 			id: socket.data.userId,
-			color: this.getColor(),
+			color,
 			markers: this.markers.getEntities(),
 			tokens: this.tokens.getEntities(),
 			mapUrl: this.mapUrl,
 			chats: this.chats,
+			users: this.users,
 		});
 
 		for (const [event, handler] of Object.entries(roomHandlers))
 			socket.on(event, (...args) => handler(socket, ...args));
 	}
 
-	onLeave(socketId: string) {
-		console.log("Removing marker of " + socketId);
+	onLeave(userId: string) {
+		console.log("Removing marker of " + userId);
 		//this.updateMarkers(this.markers.filter((e) => e.ownerId !== socketId));
+		delete this.users[userId];
 		for (const channel of this.chats)
-			ChannelsManager.get(channel.id).onLeave(socketId);
+			ChannelsManager.get(channel.id).onLeave(userId);
 	}
 
 	getColor() {
 		if (this.colors.length === 0) this.colors = [...COLORS];
-		return this.colors.shift();
+		return this.colors.shift() || "";
 	}
 
 	flytTo(pos: [number, number], zoom: number) {
