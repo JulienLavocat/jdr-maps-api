@@ -1,14 +1,13 @@
-import { config } from "dotenv";
-import { Server as HTTPServer } from "http";
-import express from "express";
-import { Server as IO, Socket } from "socket.io";
-import Room from "./room";
-import router from "./express";
 import cors from "cors";
-import { nanoid } from "nanoid";
-import RoomsManager from "./room/managers/roomsManager";
-import ChannelsManager from "./chat/channelsManager";
+import { config } from "dotenv";
+import express from "express";
+import { Server as HTTPServer } from "http";
+import { Server as IO, Socket } from "socket.io";
 import { Message } from "./chat/channel";
+import ChannelsManager from "./chat/channelsManager";
+import router from "./express";
+import tokens from "./tokens";
+import RoomsManager from "./room/managers/roomsManager";
 config();
 
 const app = express();
@@ -24,6 +23,7 @@ app.use(
 );
 
 app.use(router);
+app.use("/tokens", tokens);
 
 RoomsManager.addRoom("jdr");
 
