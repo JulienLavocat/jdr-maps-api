@@ -1,7 +1,6 @@
 import { Router } from "express";
 import path from "path";
-import fs from "fs";
-import sharp, { RGBA, OverlayOptions } from "sharp";
+import sharp, { OverlayOptions, RGBA } from "sharp";
 const router = Router();
 
 const statusPaths: Record<string, string> = {
@@ -28,8 +27,6 @@ router.get("/:token/:status/:type", async (req, res) => {
 		"../../data/tokens/",
 		token.replace(/\$/g, "/"),
 	);
-
-	console.log(tokenPath);
 
 	try {
 		const compositeEffects: OverlayOptions[] = [

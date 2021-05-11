@@ -11,6 +11,8 @@ export interface Token {
 	rotation: number;
 	ownerId: string;
 	imgUrl: string;
+	type: string;
+	status: string;
 	size: number;
 }
 

@@ -40,21 +40,12 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 			ownerId: socket.data.userId,
 			size: DEFAULT_TOKEN_SIZE,
 			rotation: 0,
+			status: "alive",
+			type: "neutral",
 		});
 	},
-	update_token: (
-		socket: Socket,
-		roomId: string,
-		tokenId: string,
-		pos: [number, number],
-		rotation: number,
-	) => {
-		const tokens = RoomsManager.getRoom(roomId).tokens;
-		tokens.set(tokenId, {
-			...tokens.get(tokenId),
-			pos,
-			rotation,
-		});
+	update_token: (socket: Socket, roomId: string, token: Token) => {
+		RoomsManager.getRoom(roomId).tokens.set(token.id, token);
 	},
 	set_current_map: (socket: Socket, roomId: string, map: number) => {
 		RoomsManager.getRoom(roomId).setCurrentMap(socket.data.userId, map);
