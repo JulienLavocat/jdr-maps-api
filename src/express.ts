@@ -41,4 +41,15 @@ router.get("/maps/:id", (req, res) => {
 	);
 });
 
+router.delete("/maps/:id", async (req, res) => {
+	await s3
+		.deleteObject({
+			Bucket: "jdr",
+			Key: req.params.id,
+		})
+		.promise();
+
+	res.send(await listMaps());
+});
+
 export default router;
