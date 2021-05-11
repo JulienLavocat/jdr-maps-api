@@ -1,10 +1,11 @@
 import { nanoid } from "nanoid";
-import { Socket, Server as IO } from "socket.io";
-import Channel from "../chat/channel";
-import { EntityManager } from "./entityManager";
-import RoomsManager from "./roomsManager";
-import ChannelsManager from "../chat/channelsManager";
+import { Server as IO, Socket } from "socket.io";
 import DiceBot from "../chat/bots/dice/index";
+import ChannelsManager from "../chat/channelsManager";
+import { EntityManager } from "./entityManager";
+import { MapData, Marker, Token, UserInfos } from "./interfaces";
+import MapManager from "./mapManager";
+import RoomsManager from "./roomsManager";
 
 const COLORS = [
 	"black",
@@ -16,22 +17,6 @@ const COLORS = [
 	"violet",
 	"yellow",
 ];
-
-export interface Marker {
-	id: string;
-	pos: [number, number];
-	color: string;
-	ownerId: string;
-}
-
-export interface Token {
-	id: string;
-	pos: [number, number];
-	rotation: number;
-	ownerId: string;
-	imgUrl: string;
-	size: number;
-}
 
 const DEFAULT_TOKEN_SIZE = 80;
 
@@ -81,8 +66,11 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 			rotation,
 		});
 	},
-	set_map: (socket: Socket, roomId: string, mapUrl: string) => {
-		RoomsManager.getRoom(roomId).setMap(socket.data.userId, mapUrl);
+	set_current_map: (socket: Socket, roomId: string, map: number) => {
+		RoomsManager.getRoom(roomId).setCurrentMap(socket.data.userId, map);
+	},
+	set_maps: (socket: Socket, roomId: string, maps: MapData[]) => {
+		RoomsManager.getRoom(roomId).setMaps(socket.data.userId, maps);
 	},
 	remove_token: (socket: Socket, roomId: string, tokenId: string) => {
 		RoomsManager.getRoom(roomId).tokens.remove(tokenId);
@@ -96,38 +84,26 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 	},
 };
 
-export interface UserInfos {
-	id: string;
-	name: string;
-	color: string;
-}
-
-export interface MapData {
-	name: string;
-	url: string;
-}
-
 export default class Room {
 	private colors: string[];
-	private map2: {
-		maps: MapData[];
-		current: number;
-	};
-	private map: string;
 	markers: EntityManager<Marker>;
 	tokens: EntityManager<Token>;
 	chats: { name: string; id: string }[];
 	users: Record<string, UserInfos>;
+	mapManager: MapManager;
 
 	constructor(private io: IO, private roomId: string) {
 		this.colors = [...COLORS];
 		this.markers = new EntityManager(io, roomId, "markers");
 		this.tokens = new EntityManager(io, roomId, "tokens");
-		this.map = "Garde.jpg";
-		this.map2 = {
-			maps: [{ name: "Garde.jpg", url: "Garde.jpg" }],
-			current: 0,
-		};
+		this.mapManager = new MapManager(io, roomId, [
+			{
+				name: "Garde.jpg",
+				url: "Garde.jpg",
+				date: Date.now(),
+				id: nanoid(),
+			},
+		]);
 
 		const channel = ChannelsManager.createChannel(
 			"lancer-de-dés",
@@ -154,7 +130,10 @@ export default class Room {
 			color,
 			markers: this.markers.getEntities(),
 			tokens: this.tokens.getEntities(),
-			mapUrl: this.map,
+			map: {
+				maps: this.mapManager.maps,
+				current: this.mapManager.current,
+			},
 			chats: this.chats,
 			users: this.users,
 		});
@@ -180,10 +159,12 @@ export default class Room {
 		this.io.to(this.roomId).emit("fly_to", pos, zoom);
 	}
 
-	setMap(id: string, mapUrl: string) {
-		console.log(`Updating map ${this.map} to ${mapUrl}`);
-		this.map = mapUrl;
-		this.io.to(this.roomId).emit("set_map", mapUrl);
+	setCurrentMap(id: string, map: number) {
+		this.mapManager.setCurrentMap(map);
+	}
+
+	setMaps(id: string, maps: MapData[]) {
+		this.mapManager.setMaps(maps);
 	}
 
 	log(msg: string) {
