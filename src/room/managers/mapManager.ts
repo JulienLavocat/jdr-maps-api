@@ -1,6 +1,5 @@
-import { MapData } from "./interfaces";
+import { MapData } from "../interfaces";
 import { Server as IO } from "socket.io";
-import e from "express";
 import { nanoid } from "nanoid";
 export default class MapManager {
 	maps: MapData[];

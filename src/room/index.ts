@@ -2,10 +2,10 @@ import { nanoid } from "nanoid";
 import { Server as IO, Socket } from "socket.io";
 import DiceBot from "../chat/bots/dice/index";
 import ChannelsManager from "../chat/channelsManager";
-import { EntityManager } from "./entityManager";
+import { EntityManager } from "./managers/entityManager";
 import { MapData, Marker, Token, UserInfos } from "./interfaces";
-import MapManager from "./mapManager";
-import RoomsManager from "./roomsManager";
+import MapManager from "./managers/mapManager";
+import RoomsManager from "./managers/roomsManager";
 
 const COLORS = [
 	"black",

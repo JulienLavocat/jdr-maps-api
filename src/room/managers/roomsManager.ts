@@ -1,5 +1,5 @@
-import { io } from "..";
-import Room from "./index";
+import { io } from "../../";
+import Room from "../";
 export default class RoomsManager {
 	static rooms: Record<string, Room> = {};
 

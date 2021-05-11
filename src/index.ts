@@ -6,7 +6,7 @@ import Room from "./room";
 import router from "./express";
 import cors from "cors";
 import { nanoid } from "nanoid";
-import RoomsManager from "./room/roomsManager";
+import RoomsManager from "./room/managers/roomsManager";
 import ChannelsManager from "./chat/channelsManager";
 import { Message } from "./chat/channel";
 config();
