@@ -53,7 +53,7 @@ export default class Channel {
 		if (!msg.id) msg.id = nanoid();
 		msg.sentAt = Date.now();
 		this.messages.push(msg);
-		this.io.to(this.id).emit("new_message", this.id, this.messages);
+		this.io.to(this.id).emit("new_message", this.id, 1, this.messages);
 		this.bot?.onMessage(this, msg);
 	}
 
