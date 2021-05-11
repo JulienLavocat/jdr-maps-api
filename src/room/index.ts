@@ -6,17 +6,7 @@ import { EntityManager } from "./managers/entityManager";
 import { MapData, Marker, Token, UserInfos } from "./interfaces";
 import MapManager from "./managers/mapManager";
 import RoomsManager from "./managers/roomsManager";
-
-const COLORS = [
-	"black",
-	"blue",
-	"gold",
-	"grey",
-	"orange",
-	"red",
-	"violet",
-	"yellow",
-];
+import { ColorsManager } from "./managers/colorsManager";
 
 const DEFAULT_TOKEN_SIZE = 80;
 
@@ -85,15 +75,14 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 };
 
 export default class Room {
-	private colors: string[];
 	markers: EntityManager<Marker>;
 	tokens: EntityManager<Token>;
 	chats: { name: string; id: string }[];
 	users: Record<string, UserInfos>;
 	mapManager: MapManager;
+	colors: ColorsManager;
 
 	constructor(private io: IO, private roomId: string) {
-		this.colors = [...COLORS];
 		this.markers = new EntityManager(io, roomId, "markers");
 		this.tokens = new EntityManager(io, roomId, "tokens");
 		this.mapManager = new MapManager(io, roomId, [
@@ -104,6 +93,7 @@ export default class Room {
 				id: nanoid(),
 			},
 		]);
+		this.colors = new ColorsManager();
 
 		const channel = ChannelsManager.createChannel(
 			"lancer-de-dés",
@@ -117,7 +107,7 @@ export default class Room {
 	onJoin(socket: Socket, name: string) {
 		this.log(`${socket.data.userId} connected`);
 
-		const color = this.getColor();
+		const color = this.colors.getColor();
 
 		this.users[socket.data.userId] = {
 			id: socket.data.userId,
@@ -145,14 +135,10 @@ export default class Room {
 	onLeave(userId: string) {
 		console.log("Removing marker of " + userId);
 		//this.updateMarkers(this.markers.filter((e) => e.ownerId !== socketId));
+		this.colors.addColor(this.users[userId].color);
 		delete this.users[userId];
 		for (const channel of this.chats)
 			ChannelsManager.get(channel.id).onLeave(userId);
-	}
-
-	getColor() {
-		if (this.colors.length === 0) this.colors = [...COLORS];
-		return this.colors.shift() || "";
 	}
 
 	flytTo(pos: [number, number], zoom: number) {
