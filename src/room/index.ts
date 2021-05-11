@@ -27,21 +27,16 @@ const roomHandlers: Record<string, (socket: Socket, ...args: any[]) => void> = {
 	remove_marker: (socket: Socket, roomId: string, id: string) => {
 		RoomsManager.getRoom(roomId).markers.remove(id);
 	},
-	add_token: (
-		socket: Socket,
-		roomId: string,
-		pos: [number, number],
-		imgUrl: string,
-	) => {
+	add_token: (socket: Socket, roomId: string, token: Token) => {
 		RoomsManager.getRoom(roomId).tokens.add({
 			id: nanoid(),
-			pos,
-			imgUrl,
+			pos: token.pos || [500, 500],
+			imgUrl: token.imgUrl,
 			ownerId: socket.data.userId,
 			size: DEFAULT_TOKEN_SIZE,
-			rotation: 0,
-			status: "alive",
-			type: "neutral",
+			rotation: token.rotation || 0,
+			status: token.status || "alive",
+			type: token.type || "neutral",
 		});
 	},
 	update_token: (socket: Socket, roomId: string, token: Token) => {
